@@ -14,16 +14,17 @@ use std::default::Default;
 use std::fmt::{Binary, Debug, LowerHex, Octal};
 use std::fs::{read_to_string, write};
 use std::hash::Hash;
-use std::iter::{Enumerate, Filter, IntoIterator, Sum, zip};
+pub use std::iter::{Enumerate, Filter, IntoIterator, Sum, zip};
 use std::ops::{Index, IndexMut, Neg, Range};
 use std::path::Path;
 use std::str::FromStr;
+pub use regex::Regex;
 
 // Not safe for cryptography
 use fxhash::FxBuildHasher as DefaultHasher;  // faster than std HashMap, at least for small hashes.
 pub use fxhash::hash;
 // use hashbrown::HashMap; - extension of std HashMap, but std is actually only api around this
-use itertools::itertools::Itertools;  // one extra level of itertools because it is a submodule
+pub use itertools::itertools::Itertools;  // one extra level of itertools because it is a submodule
 use itertools::itertools::traits::HomogeneousTuple;
 
 pub mod hashlib;
@@ -554,12 +555,12 @@ where
 // std::ops::Deref can be used as callable class, if that callable does not take args: build = Builder(...); build();
 
 
-trait SetAdd<T> {
+pub trait SetAdd<T> {
     // alias
     fn add(&mut self, other: T) -> ();
 }
 
-trait SetUpdate<I> {
+pub trait SetUpdate<I> {
     fn update(&mut self, other: I) -> ();
 }
 
@@ -732,7 +733,7 @@ pub mod itertools {
     pub use itertools;
     use itertools::iproduct;
     use itertools::structs::{Combinations, Product};
-    use itertools::Itertools;
+    pub use itertools::Itertools;
 
     use crate::Naruto;
 
