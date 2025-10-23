@@ -7,7 +7,7 @@
 // #![feature(portable_simd)]
 
 use std::char::from_u32;
-use std::cmp::{max};
+pub use std::cmp::{max};
 pub use std::collections::{HashMap, HashSet};
 use std::collections::hash_map::Iter;
 use std::default::Default;
