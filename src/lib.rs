@@ -552,6 +552,7 @@ where
 // tailcall - rewrites tail-recursive functions to use iteration
 // stacker - spills over to the heap if the stack has hit its recursion limit
 // phf - perfect hash functions
+// matrix_operations = "0.1.4"
 // std::ops::Deref can be used as callable class, if that callable does not take args: build = Builder(...); build();
 
 

@@ -7,14 +7,14 @@ use super::map;
 pub fn md5<T: AsRef<[u8]>>(data: T) -> String {
     let mut context = Context::new();
     context.consume(data);
-    map(|y| format!("{y:x}"), context.compute()).join("")
+    map(|y| format!("{y:02x}"), context.finalize()).join("")
 }
 
-// from md5 = '0.7.0'
+// from md5 = '0.8.0'
 #[derive(Clone)]
 struct Context {
     buffer: [u8; 64],
-    count: [u32; 2],
+    count: u64,
     state: [u32; 4],
 }
 
@@ -31,42 +31,35 @@ impl Context {
     pub fn new() -> Context {
         Context {
             buffer: [0; 64],
-            count: [0, 0],
+            count: 0,
             state: [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476],
         }
     }
 
     /// Consume data.
-    #[cfg(target_pointer_width = "32")]
     #[inline]
     fn consume<T: AsRef<[u8]>>(&mut self, data: T) {
         consume(self, data.as_ref());
     }
 
-    /// Consume data.
-    #[cfg(target_pointer_width = "64")]
-    fn consume<T: AsRef<[u8]>>(&mut self, data: T) {
-        for chunk in data.as_ref().chunks(u32::MAX as usize) {
-            consume(self, chunk);
-        }
-    }
-
     /// Finalize and return the digest.
-    fn compute(mut self) -> [u8; 16] {
+    #[rustfmt::skip]
+    #[allow(clippy::double_parens, clippy::needless_range_loop)]
+    pub fn finalize(mut self) -> [u8; 16] {
         let mut input = [0u32; 16];
-        let k = ((self.count[0] >> 3) & 0x3f) as usize;
-        input[14] = self.count[0];
-        input[15] = self.count[1];
+        let k = ((self.count >> 3) & 0x3f) as usize;
+        input[14] = self.count as u32;
+        input[15] = (self.count >> 32) as u32;
         consume(
             &mut self,
             &PADDING[..(if k < 56 { 56 - k } else { 120 - k })],
         );
         let mut j = 0;
-        for item in input.iter_mut().take(14) {
-            *item = ((self.buffer[j + 3] as u32) << 24) |
-                    ((self.buffer[j + 2] as u32) << 16) |
-                    ((self.buffer[j + 1] as u32) <<  8) |
-                     (self.buffer[j    ] as u32);
+        for i in 0..14 {
+            input[i] = ((self.buffer[j + 3] as u32) << 24) |
+                       ((self.buffer[j + 2] as u32) << 16) |
+                       ((self.buffer[j + 1] as u32) <<  8) |
+                       ((self.buffer[j    ] as u32)      );
             j += 4;
         }
         transform(&mut self.state, &input);
@@ -92,20 +85,15 @@ fn consume(
     data: &[u8],
 ) {
     let mut input = [0u32; 16];
-    let mut k = ((count[0] >> 3) & 0x3f) as usize;
-    let length = data.len() as u32;
-    count[0] = count[0].wrapping_add(length << 3);
-    if count[0] < length << 3 {
-        count[1] = count[1].wrapping_add(1);
-    }
-    count[1] = count[1].wrapping_add(length >> 29);
+    let mut k = ((*count >> 3) & 0x3f) as usize;
+    *count = count.wrapping_add((data.len() as u64) << 3);
     for &value in data {
         buffer[k] = value;
         k += 1;
         if k == 0x40 {
             let mut j = 0;
-            for item in input.iter_mut().take(16) {
-                *item = ((buffer[j + 3] as u32) << 24) |
+            for item in 0..16 {
+                input[item] = ((buffer[j + 3] as u32) << 24) |
                         ((buffer[j + 2] as u32) << 16) |
                         ((buffer[j + 1] as u32) <<  8) |
                          (buffer[j    ] as u32);
