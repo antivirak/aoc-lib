@@ -34,8 +34,10 @@ pub mod hashlib;
 // list.append = vec.push, list.extend = vec.append
 
 // it is not possible to have kwargs in rust, but we can pass dict (but then if called with defaults, we still need to pass empty one)
-// or use macro, or use builder pattern and call optional methods
+// or use macro, or use bon crate for automatic builder pattern
 // or use a pattern like https://github.com/alexpusch/rust-magic-patterns/tree/master/axum-style-magic-function-param
+
+// we can use must_use on queries to make sure they get executed - like if we implement or find alternative for pypika
 
 pub trait Naruto: Clone {}
 impl<T: Clone> Naruto for T {}
@@ -281,7 +283,7 @@ where
     <T as FromStr>::Err: Debug,
 {
     // need to specify the type by caller
-    s.parse().unwrap()
+    s.trim().parse().unwrap()
 }
 
 
@@ -318,6 +320,7 @@ where
 
 
 // max, min reimported; but they take only 2 arguments, not list of any len
+// we can have those for iterators using reduce
 
 
 pub fn next<I: Iterator>(iterator: &mut I) -> Option<I::Item> {
@@ -532,7 +535,7 @@ where
 // time = "0.3.36"
 // either = "1.13.0" - left, right option - functional
 // reqwest = "0.12.8"
-// tokio = "1.40.0", async-std = "1.13.0" - async
+// tokio = "1.40.0", async-std = "1.13.0" - async + futures_util = "0.3.31"
 // sqlx = "0.8.2" - umoznuje mimo jiné compile-time checking sql dotazů
 // sqlformat = "0.3.0"
 // Diesel - orm
@@ -554,6 +557,9 @@ where
 // phf - perfect hash functions
 // matrix_operations = "0.1.4"
 // std::ops::Deref can be used as callable class, if that callable does not take args: build = Builder(...); build();
+// astral-tokio-tar - async (de)compression. Make sure to use this fork, not the unmaintained tokio-tar
+// askama - jinja
+// utoipa-axum - swagger
 
 
 pub trait SetAdd<T> {
@@ -638,7 +644,6 @@ pub mod collections {
         queue
     }
 
-    // ChainMap
     // Counter - TODO this needs to be implemented, I think I use it somewhere
     // indexmap = "2.6.0" - OrderedDict, orderedset
     // OrderedDict
@@ -661,7 +666,7 @@ pub mod functools {
         data: RefCell<Dict<K, V>>,  // interior mutability
         wrapped: Box<dyn Fn(&dyn Fn(K) -> V, K) -> V + 'a>,
         // TODO So far only supports one arg to the wrapped, so either 1 hashable or tuple of more args
-        // TODO multithread version - but maybe works already
+        // TODO multithread version - but maybe works already. Should work with Dict in Arc<Mutex<_>>
         // TODO we could overcome the need for hashable key by using custom struct, see advent_24_21
     }
 
@@ -801,6 +806,8 @@ pub mod list {
         lst.iter().position(|&x| x == item).unwrap()
     }
     // remove?
+    // TODO: more list methods: pop([i]) clear() count()
+    // maybe as a trait, not in this mod
 }
 
 
