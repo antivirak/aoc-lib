@@ -843,9 +843,12 @@ pub mod np {
     use std::cmp::Ord;
     use std::default::Default;
     use std::ops::{Add, AddAssign, Neg, Sub};
+    use num_traits::CheckedSub;
     use crate::abs;
 
     // if not using ndarray crate, implement traits for vec allowing +, -, *, /, ** operations
+
+    // vec_square or directly a distance between coords (sqrt((a1-b1)**2-(a2-b2)**2))
 
     // transpose
 
@@ -896,12 +899,19 @@ pub mod np {
         res
     }
 
-    pub fn substract<T: Sub<Output = T>>(a: Vec<T>, b: Vec<T>) -> Vec<T> {
+    pub fn substract<T: CheckedSub<Output = T>>(a: Vec<T>, b: Vec<T>) -> Vec<T> {
         // element-wise
         // TODO prealocate like in logical_not
         let mut res = vec![];
         for (aval, bval) in a.into_iter().zip(b) {
-            res.push(aval - bval);
+            // NOTE this silences an error in case we don't want this type of sub.
+            // but most of the time np::substract on unsigned type will be called to get abs(diff)
+            let intermed = aval.checked_sub(&bval);
+            if let Some(diff) = intermed {
+                res.push(diff);
+            } else {
+                res.push(bval - aval);
+            }
         }
         res
     }
@@ -987,7 +997,10 @@ pub mod np {
 }
 
 pub mod pstr {
-    // str.format() ?
+    pub fn str<T: std::fmt::Debug>(item: T) -> String {
+        // TODO: generic or dynamic dispatch to return the same type (str, char) as provided?
+        format!("{:?}", item)
+    }
 
     pub fn strip(item: &str) -> &str {
         item.trim()
